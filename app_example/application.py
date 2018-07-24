@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 from flask import Flask
-from .views.add_member import AddMember
+from flask_restful import Api
+
+from .resources.members import Members
 
 
 def create_app():
     app = Flask(__name__)
+    api = Api(app)
 
-    app.add_url_rule('/add', view_func=AddMember.as_view('index'))
+    api.add_resource(Members, '/members')
 
     return app

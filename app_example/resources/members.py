@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from flask.views import MethodView
+from flask_restful import Resource
 from . import OK_RESULT
 
 
-class AddMember(MethodView):
+class Members(Resource):
     def get(self):
         return OK_RESULT()
