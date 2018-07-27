@@ -39,6 +39,8 @@ def test_add_member_validation(client):
 
 
 def test_add_member(client):
+    from neighbours.models import Member
+
     response = client.post(
         '/members',
         content_type='application/json',
@@ -50,3 +52,9 @@ def test_add_member(client):
     )
     assert 200 == response.status_code
     assert response.json['status'] == 'OK'
+
+    assert Member.query.count() == 1
+    member = Member.query.first()
+    assert member.name == 'Member 1'
+    assert member.x == 100
+    assert member.y == 200.20

@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 from flask import Flask
 from flask_restful import Api
-from flask_sqlalchemy import SQLAlchemy
 
-from .resources.member import Member
-
-
-db = SQLAlchemy()
+from neighbours.db import db
+from neighbours.routes import init_routes
 
 
 def init(config_name='neighbours.config.DevelopmentConfig'):
@@ -15,9 +12,9 @@ def init(config_name='neighbours.config.DevelopmentConfig'):
     db.init_app(app)
 
     api = Api(app)
-    api.add_resource(Member, '/members')
+    init_routes(api)
 
-    return app
+    return app, api
 
 
-app = init()
+app, api = init()

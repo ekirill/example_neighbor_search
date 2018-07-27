@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 from flask_restful import Resource, reqparse
+
+from neighbours.db import db
+from neighbours.models import Member
 from . import OK_RESULT
 
 
@@ -16,9 +19,11 @@ parser.add_argument('x', type=float, required=True, nullable=False, location='js
 parser.add_argument('y', type=float, required=True, nullable=False, location='json')
 
 
-class Member(Resource):
+class MembersResource(Resource):
     def post(self):
-        args = parser.parse_args()
-        print(args)
+        member_data = parser.parse_args()
+
+        db.session.add(Member(**member_data))
+        db.session.commit()
 
         return OK_RESULT()

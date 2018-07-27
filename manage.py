@@ -1,8 +1,13 @@
 #!/usr/bin/env python
+import os
 
 from flask.cli import FlaskGroup
 
-from neighbours.application import app, db
+from neighbours.application import db
+
+
+if not os.getenv("FLASK_APP"):
+    os.environ["FLASK_APP"] = "neighbours/application.py"
 
 
 cli = FlaskGroup()
