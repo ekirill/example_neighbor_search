@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import json
-import random
 
 
 def test_add_member_validation(client):
@@ -61,36 +60,33 @@ def test_add_member(client):
     assert member.y == 200.20
 
 
-def test_search_neighbours(client):
-    x_k = 2.5
-    y_k = 1.5
-
-    for i in range(200):
+def test_search_neighbours(client, points):
+    for i, point in enumerate(points):
         client.post(
             '/member',
             content_type='application/json',
             data=json.dumps({
                 'name': 'Member %s' % i,
-                'x': i * x_k,
-                'y': i * y_k,
+                'x': point[0],
+                'y': point[1],
             })
         )
 
-    response = client.get('/neighbours?x={}&y={}&limit=2'.format(20 * x_k, 20 * y_k))
+    response = client.get('/neighbours?x={}&y={}&limit=2'.format(150.22, -500.77))
     assert 200 == response.status_code
     assert 'OK' == response.json['status']
     assert 2 == len(response.json['data'])
-    assert ['Member 20', 'Member 19'] == [_m['name'] for _m in response.json['data']]
+    assert ['Member 925', 'Member 795'] == [_m['name'] for _m in response.json['data']]
 
-    response = client.get('/neighbours?x={}&y={}&limit=5'.format(150 * x_k, 150 * y_k))
+    response = client.get('/neighbours?x={}&y={}&limit=5'.format(-900.222212, 1000.0))
     assert 200 == response.status_code
     assert 'OK' == response.json['status']
     assert 5 == len(response.json['data'])
-    assert ['Member 150', 'Member 149', 'Member 151', 'Member 148', 'Member 152'] \
+    assert ['Member 201', 'Member 142', 'Member 114', 'Member 198', 'Member 521'] \
         == [_m['name'] for _m in response.json['data']]
 
-    response = client.get('/neighbours?x={}&y={}&limit=4'.format(150 * -x_k, 150 * y_k))
+    response = client.get('/neighbours?x={}&y={}&limit=4'.format(0.0, -10.1232))
     assert 200 == response.status_code
     assert 'OK' == response.json['status']
     assert 4 == len(response.json['data'])
-    assert ['Member 0', 'Member 1', 'Member 2', 'Member 3'] == [_m['name'] for _m in response.json['data']]
+    assert ['Member 52', 'Member 573', 'Member 311', 'Member 520'] == [_m['name'] for _m in response.json['data']]

@@ -37,6 +37,7 @@ class NeighboursResource(Resource):
                 'name': _member_data[0],
                 'x': _member_data[1],
                 'y': _member_data[2],
+                'distance': distance,
             })
 
         return OK_RESULT(result)

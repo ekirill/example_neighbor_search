@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import sys
 import os
 import pytest
@@ -19,3 +20,9 @@ def app():
         yield app
         db.session.remove()  # looks like db.session.close() would work as well
         db.drop_all()
+
+
+@pytest.fixture
+def points():
+    with open(os.path.join(os.path.dirname(__file__), 'points.json')) as f:
+        return json.load(f)
