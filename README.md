@@ -4,10 +4,7 @@ In this example project I use Flask with Flask-Restful
 to produce simple service for searching neighbours.
 SQLite is used for storing the members. Nearest neighbour search
 algorithm is based on
-Cover Tree (https://en.wikipedia.org/wiki/Cover_tree) data structure
-(or Quadtree https://en.wikipedia.org/wiki/Quadtree , need to think).
-It uses just linear search for now.
-
+k-d Tree (https://en.wikipedia.org/wiki/K-d_tree) data structure.
 
 ### Methods
 It has two methods:
