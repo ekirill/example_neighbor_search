@@ -14,9 +14,9 @@ It has two methods:
 Adds member to db. Body must contain JSON with _name_, _x_ and _y_ keys.
 
 
-```GET /neighbours?x=100.100&y=200.201```
+```GET /neighbours?x=100.100&y=200.201&limit=10```
 
-Find <=100 nearest members.
+Find <=10 nearest members.
 
 ### Runnung
 Create venv in project folder.
@@ -39,6 +39,3 @@ $ FLASK_APP=neighbours/application.py ./manage.py run
 ```
 
 The service should be accesible at http://localhost:5000
-
-### Example
-TODO
