@@ -1,10 +1,10 @@
 """
 k-d tree implementation for 2-dimensional points
 """
-import sys
 from collections import namedtuple
+from math import sqrt
 from pprint import pformat
-from typing import Optional, Any, List
+from typing import Optional, Any
 
 
 class Point(namedtuple('Point', 'x y')):
@@ -43,65 +43,129 @@ class SortedDistanceList(object):
     def size(self):
         return len(self.__list)
 
+    @property
+    def is_full(self):
+        return self.__len == self.size
+
+    @property
+    def is_empty(self):
+        return self.__len == 0
+
+    def get_item_distance(self, idx: int) -> Optional[float]:
+        return self.__list[idx] and sqrt(self.__list[idx][1]) or None
+
     def __len__(self):
         return self.__len
 
     def __getitem__(self, item):
         if item == self.__len:
             raise IndexError
-        return self.__list[item]
+        return self.__list[item][0]
 
-
-class Node(namedtuple('Node', 'location data left right parent')):
     def __repr__(self):
-        return pformat(tuple(self))
+        return pformat(tuple(self.__list))
 
 
-class KDTree(object):
-    DIMENSIONS = 2
+def square_distance(p1: Point, p2: Point):
+    """
+    Using square distance for speed improving
+    """
+    return (p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2
 
-    def __init__(self):
-        self._root = None
 
-    def get_nearest_leaf_node(self, point: Point):
-        if not self._root:
-            return None, None
+class Node(object):
+    __slots__ = ('location', 'depth', 'data', 'left', 'right', 'parent')
 
-        current = self._root
+    def __init__(self, location, depth, data, parent):
+        self.location = location
+        self.depth = depth
+        self.data = data
+        self.parent = parent
+        self.left = None
+        self.right = None
+
+    def __repr__(self):
+        return pformat(tuple([self.location, self.data, self.left, self.right]))
+
+    def get_nearest_leaf_node(self, point: Point) -> 'Node':
+        current = self
         current_depth = 0
+        dimensions = len(self.location)
         while True:
-            current_axis = current_depth % self.DIMENSIONS
-            _next = point[current_axis] <= current.location[current_axis] and current.left or current.right
+            current_axis = current_depth % dimensions
+            if point[current_axis] <= current.location[current_axis]:
+                _next = current.left
+            else:
+                _next = current.right
             if _next is None:
-                return current, current_depth
+                return current
             current = _next
             current_depth += 1
 
     def add(self, point: Point, data: Any):
-        new_node = Node(point, data, None, None, None)
-        parent, depth = self.get_nearest_leaf_node(point)
-        if parent is None:
-            self._root = new_node
+        dimensions = len(self.location)
+        parent = self.get_nearest_leaf_node(point)
+        axis = parent.depth % dimensions
+        new_node = Node(point, parent.depth + 1, data, parent)
+        if new_node.location[axis] <= parent.location[axis]:
+            parent.left = new_node
         else:
-            axis = depth % self.DIMENSIONS
-            new_node.parent = parent
-            if point[axis] <= parent.location[axis]:
-                parent.left = new_node
-            else:
-                parent.right = new_node
+            parent.right = new_node
 
-    @classmethod
-    def _distance(cls, p1: Point, p2: Point):
-        """
-        Using square distance for improving speed
-        """
-        return (p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2
+    def get_neighbours(self, point: Point, cnt: int=1, result: SortedDistanceList=None) -> SortedDistanceList:
+        root = self
 
-    def get_neighbours(self, point: Point, k=1) -> List[Node]:
-        result = SortedDistanceList(k)
+        dimensions = len(self.location)
+        if result is None:
+            result = SortedDistanceList(cnt)
 
-        current_node, current_depth = self.get_nearest_leaf_node(point)
-        # TODO
+        current_node = self.get_nearest_leaf_node(point)
+        while True:
+            if not current_node:
+                break
+
+            current_distance = square_distance(point, current_node.location)
+            if not result.is_full or current_distance < result.max_distance:
+                result.add((current_node.location, current_node.data), current_distance)
+
+            # if our nearest radius sphere intersects with splitting pane,
+            # there could be nearer points on the other side of the plane
+            current_axis = current_node.depth % dimensions
+            if (point[current_axis] - current_node.location[current_axis]) ** 2 <= result.max_distance:
+                if point[current_axis] <= current_node.location[current_axis]:
+                    if current_node.right:
+                        result = current_node.right.get_neighbours(point, cnt, result)
+                else:
+                    if current_node.left:
+                        result = current_node.left.get_neighbours(point, cnt, result)
+
+            if current_node == root:
+                break
+            current_node = current_node.parent
+
+        return result
+
+
+class KDTree(object):
+    """
+    K-D tree implementation
+    https://en.wikipedia.org/wiki/K-d_tree
+    """
+
+    def __init__(self):
+        self._root = None
+
+    def add(self, point: Point, data: Any):
+        if self._root is None:
+            self._root = Node(point, 0, data, None)
+        else:
+            self._root.add(point, data)
+
+    def get_neighbours(self, point: Point, cnt=1) -> SortedDistanceList:
+        if self._root is None:
+            return SortedDistanceList(cnt)
+        result = self._root.get_neighbours(point, cnt)
+
         return result
 
     def rebalance(self):
@@ -117,3 +181,6 @@ class KDTree(object):
         Need to be implemented
         """
         raise NotImplementedError
+
+    def __repr__(self):
+        return repr(self._root)
