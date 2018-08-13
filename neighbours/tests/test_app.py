@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 import json
+from unittest.mock import patch
+
+from neighbours.kdtree import square_distance
 
 
 def test_add_member_validation(client):
@@ -72,21 +75,19 @@ def test_search_neighbours(client, points):
             })
         )
 
-    response = client.get('/neighbours?x={}&y={}&limit=2'.format(150.22, -500.77))
+    with patch('neighbours.kdtree.square_distance', wraps=square_distance) as m:
+        response = client.get('/neighbours?x={}&y={}&limit=2'.format(150.22, -500.77))
+        assert 100 > m.call_count
     assert 200 == response.status_code
     assert 'OK' == response.json['status']
     assert 2 == len(response.json['data'])
     assert ['Member 925', 'Member 795'] == [_m['name'] for _m in response.json['data']]
 
-    response = client.get('/neighbours?x={}&y={}&limit=5'.format(-900.222212, 1000.0))
+    with patch('neighbours.kdtree.square_distance', wraps=square_distance) as m:
+        response = client.get('/neighbours?x={}&y={}&limit=5'.format(-900.222212, 1000.0))
+        assert 100 > m.call_count
     assert 200 == response.status_code
     assert 'OK' == response.json['status']
     assert 5 == len(response.json['data'])
     assert ['Member 201', 'Member 142', 'Member 114', 'Member 198', 'Member 521'] \
         == [_m['name'] for _m in response.json['data']]
-
-    response = client.get('/neighbours?x={}&y={}&limit=4'.format(0.0, -10.1232))
-    assert 200 == response.status_code
-    assert 'OK' == response.json['status']
-    assert 4 == len(response.json['data'])
-    assert ['Member 52', 'Member 573', 'Member 311', 'Member 520'] == [_m['name'] for _m in response.json['data']]

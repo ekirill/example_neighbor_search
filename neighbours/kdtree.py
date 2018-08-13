@@ -58,7 +58,7 @@ class SortedDistanceList(object):
         return self.__len
 
     def __getitem__(self, item):
-        if item == self.__len:
+        if item >= self.__len:
             raise IndexError
         return self.__list[item][0]
 
@@ -119,23 +119,26 @@ class Node(object):
         if result is None:
             result = SortedDistanceList(cnt)
 
-        current_node = self.get_nearest_leaf_node(point)
+        leaf = self.get_nearest_leaf_node(point)
+        current_node = leaf
         while True:
-            if not current_node:
-                break
-
             current_distance = square_distance(point, current_node.location)
             if not result.is_full or current_distance < result.max_distance:
                 result.add((current_node.location, current_node.data), current_distance)
 
             # if our nearest radius sphere intersects with splitting pane,
             # there could be nearer points on the other side of the plane
+            # we must search all children if we are at the leaf node
             current_axis = current_node.depth % dimensions
-            if (point[current_axis] - current_node.location[current_axis]) ** 2 <= result.max_distance:
-                if point[current_axis] <= current_node.location[current_axis]:
+            need_search_children = (
+                current_node == leaf or
+                (point[current_axis] - current_node.location[current_axis]) ** 2 <= result.max_distance
+            )
+            if need_search_children:
+                if current_node == leaf or point[current_axis] < current_node.location[current_axis]:
                     if current_node.right:
                         result = current_node.right.get_neighbours(point, cnt, result)
-                else:
+                if current_node == leaf or point[current_axis] >= current_node.location[current_axis]:
                     if current_node.left:
                         result = current_node.left.get_neighbours(point, cnt, result)
 
