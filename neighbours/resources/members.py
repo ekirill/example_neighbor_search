@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from flask_restful import Resource, reqparse
 
-from neighbours.db import db
 from neighbours.models import Member
+from neighbours.repository import add_member
 from . import OK_RESULT
 
 
@@ -23,7 +23,6 @@ class MembersResource(Resource):
     def post(self):
         member_data = parser.parse_args()
 
-        db.session.add(Member(**member_data))
-        db.session.commit()
+        add_member(Member(**member_data))
 
         return OK_RESULT()

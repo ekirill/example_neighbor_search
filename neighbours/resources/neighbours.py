@@ -1,8 +1,7 @@
 from flask_restful import Resource, reqparse
 
-from neighbours.db import db
-from neighbours.kdtree import KDTree, Point
-from neighbours.models import Member
+from neighbours.kdtree import Point
+from neighbours.repository import get_members
 from . import OK_RESULT
 
 
@@ -19,12 +18,8 @@ class NeighboursResource(Resource):
         request_data = parser.parse_args()
         x, y, limit = request_data['x'], request_data['y'], request_data.get('limit') or self.DEFAULT_NEIGHBOURS_LIMIT
 
-        tree = KDTree()
-
-        for member in db.session.query(Member):
-            tree.add(Point(member.x, member.y), member.name)
-
-        neighbours = tree.get_neighbours(Point(x, y), limit)
+        members = get_members()
+        neighbours = members.get_neighbours(Point(x, y), limit)
         result = []
         for idx, neighbour in enumerate(neighbours):
             result.append({

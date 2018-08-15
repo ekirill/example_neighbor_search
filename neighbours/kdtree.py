@@ -87,30 +87,32 @@ class Node(object):
     def __repr__(self):
         return pformat(tuple([self.location, self.data, self.left, self.right]))
 
+    def get_child_name(self, point: Point) -> str:
+        dimensions = len(self.location)
+        current_axis = self.depth % dimensions
+        if point[current_axis] <= self.location[current_axis]:
+            return 'left'
+        else:
+            return 'right'
+
+    def get_next_child(self, point: Point) -> Optional['Node']:
+        return getattr(self, self.get_child_name(point))
+
     def get_nearest_leaf_node(self, point: Point) -> 'Node':
         current = self
         current_depth = 0
-        dimensions = len(self.location)
         while True:
-            current_axis = current_depth % dimensions
-            if point[current_axis] <= current.location[current_axis]:
-                _next = current.left
-            else:
-                _next = current.right
+            _next = current.get_next_child(point)
             if _next is None:
                 return current
             current = _next
             current_depth += 1
 
     def add(self, point: Point, data: Any):
-        dimensions = len(self.location)
         parent = self.get_nearest_leaf_node(point)
-        axis = parent.depth % dimensions
         new_node = Node(point, parent.depth + 1, data, parent)
-        if new_node.location[axis] <= parent.location[axis]:
-            parent.left = new_node
-        else:
-            parent.right = new_node
+
+        setattr(parent, parent.get_child_name(point), new_node)
 
     def get_neighbours(self, point: Point, cnt: int=1, result: SortedDistanceList=None) -> SortedDistanceList:
         root = self
